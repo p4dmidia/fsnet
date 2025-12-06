@@ -10,6 +10,8 @@ export interface NewOrderInput {
   subscription_plan_id?: string | null;
   plan_name?: string;
   referred_by_code?: string;
+  commission_amount?: number;
+  notes?: string | null;
 }
 
 export async function createOrder(input: NewOrderInput) {
@@ -23,6 +25,8 @@ export async function createOrder(input: NewOrderInput) {
     subscription_plan_id: input.subscription_plan_id ?? null,
     plan_name: input.plan_name,
     referred_by_code: input.referred_by_code,
+    commission_amount: input.commission_amount ?? null,
+    notes: input.notes ?? null,
   };
   return orgInsert("orders", payload);
 }

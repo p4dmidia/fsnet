@@ -94,9 +94,6 @@ export default function Home() {
               <a href="#como-funciona" className="text-gray-300 hover:text-orange-400 font-medium transition-all duration-300 hover:scale-105">
                 Como Funciona
               </a>
-              <a href="/loja" className="text-gray-300 hover:text-orange-400 font-medium transition-all duration-300 hover:scale-105">
-                Planos
-              </a>
               <a href="#comissoes" className="text-gray-300 hover:text-orange-400 font-medium transition-all duration-300 hover:scale-105">
                 Comissões
               </a>
@@ -504,11 +501,10 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 gap-8">
             {[
-              { speed: "300", price: "79,90", commission: "20,00", popular: false },
-              { speed: "500", price: "99,90", commission: "50,00", popular: true },
-              { speed: "800", price: "129,90", commission: "100,00", popular: false }
+              { speed: "500", price: "99,90", commission: "30,00", popular: true },
+              { speed: "800", price: "129,90", commission: "60,00", popular: false }
             ].map((plan, index) => (
               <div
                 key={index}

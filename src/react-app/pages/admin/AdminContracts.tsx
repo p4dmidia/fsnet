@@ -17,6 +17,7 @@ export default function AdminContracts() {
         plan: o.plan_name || "-",
         affiliate: a.full_name ? `${a.full_name} (${a.referral_code || '-'})` : "-",
         commission: (o.commission_amount != null) ? `R$ ${Number(o.commission_amount).toFixed(2)}` : "-",
+        notes: o.notes || "",
       };
     });
   }, [orders, affiliates]);
@@ -34,6 +35,7 @@ export default function AdminContracts() {
                 <th className="px-4 py-3 text-left text-xs font-bold text-gray-700">Plano</th>
                 <th className="px-4 py-3 text-left text-xs font-bold text-gray-700">Afiliado</th>
                 <th className="px-4 py-3 text-left text-xs font-bold text-gray-700">Comissão</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700">Observação</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -44,6 +46,7 @@ export default function AdminContracts() {
                   <td className="px-4 py-3">{r.plan}</td>
                   <td className="px-4 py-3">{r.affiliate}</td>
                   <td className="px-4 py-3">{r.commission}</td>
+                  <td className="px-4 py-3">{r.notes}</td>
                 </tr>
               ))}
             </tbody>

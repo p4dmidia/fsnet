@@ -10,6 +10,7 @@ import {
   LogOut,
   Package,
   Share2,
+  Info,
 } from "lucide-react";
 import { getAffiliateByUserId } from "@/shared/affiliates";
 import { orgSelect } from "@/shared/orgDb";
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [affiliateCode, setAffiliateCode] = useState<string | null>(null);
   const [affiliateName, setAffiliateName] = useState<string | null>(null);
   const [commissions, setCommissions] = useState<any[]>([]);
+  const [myOrders, setMyOrders] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isPending && !user) {
@@ -48,8 +50,9 @@ export default function Dashboard() {
         }
         const myComms = aff ? await orgSelect("commissions", "*", (q: any) => q.eq("affiliate_id", aff.id)) : [];
         setCommissions(myComms);
-        const myOrders = aff ? await orgSelect("orders", "*", (q: any) => q.eq("affiliate_id", aff.id)) : [];
-        const totalSales = myOrders.length;
+        const ordersList = aff ? await orgSelect("orders", "*", (q: any) => q.eq("affiliate_id", aff.id)) : [];
+        setMyOrders(ordersList);
+        const totalSales = ordersList.length;
         const totalCommission = myComms.reduce((sum: number, c: any) => sum + Number(c.amount || 0), 0);
         const pendingSales = myComms.filter((c: any) => c.status === "pending").length;
         const approvedSales = myComms.filter((c: any) => c.status === "paid" || c.status === "approved").length;
@@ -217,22 +220,20 @@ export default function Dashboard() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
-                  <td className="px-4 py-3">300 MB</td>
-                  <td className="px-4 py-3">R$ 80,00</td>
-                  <td className="px-4 py-3">R$ 20,00</td>
-                </tr>
-                <tr>
                   <td className="px-4 py-3">500 MB</td>
                   <td className="px-4 py-3">R$ 100,00</td>
-                  <td className="px-4 py-3">R$ 50,00</td>
+                  <td className="px-4 py-3">R$ 30,00</td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3">800 MB</td>
                   <td className="px-4 py-3">R$ 130,00</td>
-                  <td className="px-4 py-3">R$ 100,00</td>
+                  <td className="px-4 py-3">R$ 60,00</td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div className="mt-4 text-sm text-gray-700">
+            As comissões geradas entre os dias <span className="font-bold">1 e 30</span> de cada mês são pagas entre os dias <span className="font-bold">20 e 25</span> do mês subsequente.
           </div>
         </div>
 
@@ -283,6 +284,18 @@ export default function Dashboard() {
                           <Package className="w-4 h-4 mr-2 text-gray-400" />
                           {comm.order_id}
                         </div>
+                        {myOrders.find((o)=>o.id===comm.order_id)?.customer_name && (
+                          <div className="flex items-center">
+                            <Users className="w-4 h-4 mr-2 text-gray-400" />
+                            {myOrders.find((o)=>o.id===comm.order_id)?.customer_name}
+                          </div>
+                        )}
+                        {comm.admin_note && (
+                          <div className="flex items-start" title={comm.admin_note as string}>
+                            <Info className="w-4 h-4 mr-2 text-gray-400 mt-0.5" />
+                            <span className="text-gray-600 break-words whitespace-pre-wrap">{comm.admin_note as string}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="text-right ml-6">

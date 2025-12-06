@@ -113,9 +113,6 @@ export default function Cadastro() {
               <a href="/#como-funciona" className="text-gray-300 hover:text-orange-400 font-medium transition-all duration-300 hover:scale-105">
                 Como Funciona
               </a>
-              <a href="/loja" className="text-gray-300 hover:text-orange-400 font-medium transition-all duration-300 hover:scale-105">
-                Planos
-              </a>
               <a href="/#comissoes" className="text-gray-300 hover:text-orange-400 font-medium transition-all duration-300 hover:scale-105">
                 Comissões
               </a>

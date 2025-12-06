@@ -5,9 +5,8 @@ import { getAffiliateByReferralCode } from "@/shared/affiliates";
 import { createOrder, createCommission } from "@/shared/orders";
 
 const PLAN_VALUES: Record<string, { price: number; commission: number }> = {
-  "300MB": { price: 80, commission: 20 },
-  "500MB": { price: 100, commission: 50 },
-  "800MB": { price: 130, commission: 100 },
+  "500MB": { price: 100, commission: 30 },
+  "800MB": { price: 130, commission: 60 },
 };
 
 export default function AdminLancamento() {
@@ -65,10 +64,11 @@ export default function AdminLancamento() {
         customer_phone: "",
         customer_email: null,
         amount: Number(price),
-        status: "paid",
+        status: "pending",
         subscription_plan_id: null,
         plan_name: plan,
         referred_by_code: refCode,
+        commission_amount: commission,
       };
       console.log("Payload Venda:", payload);
       const order = await createOrder(payload);
@@ -95,13 +95,14 @@ export default function AdminLancamento() {
             </div>
           </div>
 
+          
+
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Plano Contratado</label>
             <div className="relative">
               <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <select className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg" value={plan} onChange={(e)=>setPlan(e.target.value)} required>
                 <option value="">Selecione</option>
-                <option value="300MB">300MB</option>
                 <option value="500MB">500MB</option>
                 <option value="800MB">800MB</option>
               </select>

@@ -12,6 +12,7 @@ export default function AdminAffiliates() {
   const [financeTotal, setFinanceTotal] = useState(0);
   const [selectedAffiliate, setSelectedAffiliate] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [financeNote, setFinanceNote] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -45,7 +46,7 @@ export default function AdminAffiliates() {
   const paySelected = async () => {
     if (!selectedAffiliate || selectedIds.length === 0) return;
     for (const id of selectedIds) {
-      await orgUpdate("commissions", { id, status: "pending" }, { status: "paid", updated_at: new Date().toISOString() });
+      await orgUpdate("commissions", { id, status: "pending" }, { status: "paid", payment_date: new Date().toISOString(), admin_note: financeNote, updated_at: new Date().toISOString() });
     }
     setToast("Pagamentos marcados como pagos");
     setTimeout(()=>setToast(""), 1500);
@@ -53,6 +54,7 @@ export default function AdminAffiliates() {
     setFinanceRows(list);
     setFinanceTotal(list.reduce((s: number, c: any) => s + Number(c.amount || 0), 0));
     setSelectedIds([]);
+    setFinanceNote("");
   };
 
   const toggleSelect = (id: string) => {
@@ -137,10 +139,10 @@ export default function AdminAffiliates() {
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900">Gestão Financeira - {selectedAffiliate.full_name}</h3>
               <button onClick={()=>setFinanceOpen(false)} className="text-gray-600 hover:text-gray-900">Fechar</button>
-            </div>
-            <div className="p-4">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+          </div>
+          <div className="p-4">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-bold text-gray-700">
@@ -166,18 +168,22 @@ export default function AdminAffiliates() {
                       <tr><td className="px-4 py-4 text-center text-gray-500" colSpan={4}>Sem pendências</td></tr>
                     )}
                   </tbody>
-                </table>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-700">Total Pendente: <span className="font-bold">R$ {financeTotal.toFixed(2)}</span></div>
-                <div className="flex items-center gap-3">
-                  <button onClick={toggleSelectAll} disabled={financeRows.length===0} className="px-4 py-2 border border-gray-300 rounded-lg font-bold text-gray-700 hover:bg-gray-50">Selecionar tudo</button>
-                  <button onClick={paySelected} disabled={selectedIds.length===0} className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:opacity-50">Pagar</button>
-                </div>
+              </table>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Observação de Pagamento (opcional)</label>
+              <textarea value={financeNote} onChange={(e)=>setFinanceNote(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg min-h-24" placeholder="Ex: Valor abatido na mensalidade de internet" />
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-700">Total Pendente: <span className="font-bold">R$ {financeTotal.toFixed(2)}</span></div>
+              <div className="flex items-center gap-3">
+                <button onClick={toggleSelectAll} disabled={financeRows.length===0} className="px-4 py-2 border border-gray-300 rounded-lg font-bold text-gray-700 hover:bg-gray-50">Selecionar tudo</button>
+                  <button onClick={paySelected} disabled={selectedIds.length===0} className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:opacity-50">Marcar como Pago</button>
               </div>
             </div>
           </div>
         </div>
+      </div>
       )}
     </div>
   );
