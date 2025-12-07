@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { orgSelect, orgUpdate, orgDelete } from "@/shared/orgDb";
 import { Search, ToggleLeft, ToggleRight, Trash2, DollarSign } from "lucide-react";
+import { supabase } from "@/shared/supabaseClient";
+import { FS_ORGANIZATION_ID } from "@/shared/tenant";
 
 export default function AdminAffiliates() {
   const [rows, setRows] = useState<any[]>([]);
@@ -13,6 +15,8 @@ export default function AdminAffiliates() {
   const [selectedAffiliate, setSelectedAffiliate] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [financeNote, setFinanceNote] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -45,8 +49,19 @@ export default function AdminAffiliates() {
 
   const paySelected = async () => {
     if (!selectedAffiliate || selectedIds.length === 0) return;
+    setIsUploading(true);
     for (const id of selectedIds) {
-      await orgUpdate("commissions", { id, status: "pending" }, { status: "paid", payment_date: new Date().toISOString(), admin_note: financeNote, updated_at: new Date().toISOString() });
+      let proofUrl: string | null = null;
+      if (file) {
+        const ext = (file.name.split(".").pop() || "dat").toLowerCase();
+        const key = `${FS_ORGANIZATION_ID}/${id}_${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("receipts").upload(key, file, { upsert: true, contentType: file.type || "application/octet-stream" });
+        if (!upErr) {
+          const { data } = supabase.storage.from("receipts").getPublicUrl(key);
+          proofUrl = data.publicUrl || null;
+        }
+      }
+      await orgUpdate("commissions", { id, status: "pending" }, { status: "paid", payment_date: new Date().toISOString(), admin_note: financeNote, proof_url: proofUrl, updated_at: new Date().toISOString() });
     }
     setToast("Pagamentos marcados como pagos");
     setTimeout(()=>setToast(""), 1500);
@@ -55,6 +70,8 @@ export default function AdminAffiliates() {
     setFinanceTotal(list.reduce((s: number, c: any) => s + Number(c.amount || 0), 0));
     setSelectedIds([]);
     setFinanceNote("");
+    setFile(null);
+    setIsUploading(false);
   };
 
   const toggleSelect = (id: string) => {
@@ -174,11 +191,17 @@ export default function AdminAffiliates() {
               <label className="block text-sm font-bold text-gray-700 mb-2">Observação de Pagamento (opcional)</label>
               <textarea value={financeNote} onChange={(e)=>setFinanceNote(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg min-h-24" placeholder="Ex: Valor abatido na mensalidade de internet" />
             </div>
+            <div className="mt-4">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Comprovante (imagem ou PDF)</label>
+              <input type="file" accept="image/*,application/pdf" onChange={(e)=>setFile(e.target.files?.[0] || null)} className="w-full" />
+            </div>
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-gray-700">Total Pendente: <span className="font-bold">R$ {financeTotal.toFixed(2)}</span></div>
               <div className="flex items-center gap-3">
                 <button onClick={toggleSelectAll} disabled={financeRows.length===0} className="px-4 py-2 border border-gray-300 rounded-lg font-bold text-gray-700 hover:bg-gray-50">Selecionar tudo</button>
-                  <button onClick={paySelected} disabled={selectedIds.length===0} className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:opacity-50">Marcar como Pago</button>
+                  <button onClick={paySelected} disabled={selectedIds.length===0 || isUploading} className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:opacity-50">
+                    {isUploading ? "Enviando comprovante..." : "Marcar como Pago"}
+                  </button>
               </div>
             </div>
           </div>

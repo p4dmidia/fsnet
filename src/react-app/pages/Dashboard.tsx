@@ -11,6 +11,7 @@ import {
   Package,
   Share2,
   Info,
+  Paperclip,
 } from "lucide-react";
 import { getAffiliateByUserId } from "@/shared/affiliates";
 import { orgSelect } from "@/shared/orgDb";
@@ -294,6 +295,12 @@ export default function Dashboard() {
                           <div className="flex items-start" title={comm.admin_note as string}>
                             <Info className="w-4 h-4 mr-2 text-gray-400 mt-0.5" />
                             <span className="text-gray-600 break-words whitespace-pre-wrap">{comm.admin_note as string}</span>
+                          </div>
+                        )}
+                        {comm.proof_url && (
+                          <div className="flex items-center">
+                            <Paperclip className="w-4 h-4 mr-2 text-gray-400" />
+                            <a href={comm.proof_url} target="_blank" rel="noreferrer" className="text-orange-600 font-bold">Comprovante</a>
                           </div>
                         )}
                       </div>
