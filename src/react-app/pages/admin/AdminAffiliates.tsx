@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { orgSelect, orgUpdate, orgDelete } from "@/shared/orgDb";
-import { Search, ToggleLeft, ToggleRight, Trash2, DollarSign } from "lucide-react";
+import { Search, ToggleLeft, ToggleRight, Trash2, DollarSign, Eye } from "lucide-react";
 import { supabase } from "@/shared/supabaseClient";
 import { FS_ORGANIZATION_ID } from "@/shared/tenant";
 
@@ -17,6 +17,9 @@ export default function AdminAffiliates() {
   const [financeNote, setFinanceNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [financeOrders, setFinanceOrders] = useState<any[]>([]);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewAffiliate, setViewAffiliate] = useState<any | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -44,6 +47,8 @@ export default function AdminAffiliates() {
     setFinanceRows(list);
     setFinanceTotal(list.reduce((s: number, c: any) => s + Number(c.amount || 0), 0));
     setSelectedIds([]);
+    const orders = await orgSelect("orders", "*", (q: any) => q.eq("affiliate_id", row.id));
+    setFinanceOrders(orders);
     setFinanceOpen(true);
   };
 
@@ -130,13 +135,23 @@ export default function AdminAffiliates() {
                   <td className="px-4 py-3">{r.is_active ? "Ativo" : "Bloqueado"}</td>
                   <td className="px-4 py-3">{r.created_at ? new Date(r.created_at).toLocaleDateString("pt-BR") : "-"}</td>
                   <td className="px-4 py-3">
-                    <button onClick={()=>toggleActive(r)} className="px-3 py-1 border rounded-lg mr-2 text-sm">
-                      {r.is_active ? <ToggleRight className="w-4 h-4 inline"/> : <ToggleLeft className="w-4 h-4 inline"/>}
-                      <span className="ml-1">{r.is_active ? "Bloquear" : "Desbloquear"}</span>
-                    </button>
-                    <button onClick={()=>tryDelete(r)} className="px-3 py-1 border rounded-lg text-sm text-red-600">
-                      <Trash2 className="w-4 h-4 inline"/> Excluir
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={()=>toggleActive(r)}
+                        className={`p-2 rounded-lg border flex items-center justify-center ${
+                          r.is_active ? 'text-red-600 border-red-300 hover:bg-red-50' : 'text-green-600 border-green-300 hover:bg-green-50'
+                        }`}
+                        title={r.is_active ? 'Bloquear' : 'Desbloquear'}
+                      >
+                        {r.is_active ? <ToggleRight className="w-4 h-4"/> : <ToggleLeft className="w-4 h-4"/>}
+                      </button>
+                      <button onClick={()=>tryDelete(r)} className="p-2 rounded-lg border text-red-600 border-red-300 hover:bg-red-50 flex items-center justify-center" title="Excluir">
+                        <Trash2 className="w-4 h-4"/>
+                      </button>
+                      <button onClick={()=>{ setViewAffiliate(r); setViewOpen(true); }} className="p-2 rounded-lg border text-blue-600 border-blue-300 hover:bg-blue-50 flex items-center justify-center" title="Visualizar">
+                        <Eye className="w-4 h-4"/>
+                      </button>
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <button onClick={()=>openFinance(r)} className="px-3 py-1 border rounded-lg text-sm text-green-700">
@@ -167,7 +182,7 @@ export default function AdminAffiliates() {
                       </th>
                       <th className="px-4 py-2 text-left text-xs font-bold text-gray-700">Data</th>
                       <th className="px-4 py-2 text-left text-xs font-bold text-gray-700">Valor</th>
-                      <th className="px-4 py-2 text-left text-xs font-bold text-gray-700">Origem</th>
+                      <th className="px-4 py-2 text-left text-xs font-bold text-gray-700">Cliente</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -178,14 +193,14 @@ export default function AdminAffiliates() {
                         </td>
                         <td className="px-4 py-2">{c.created_at ? new Date(c.created_at).toLocaleDateString("pt-BR") : '-'}</td>
                         <td className="px-4 py-2">R$ {Number(c.amount).toFixed(2)}</td>
-                        <td className="px-4 py-2">{c.order_id || '-'}</td>
+                        <td className="px-4 py-2">{financeOrders.find((o)=>o.id===c.order_id)?.customer_name || '-'}</td>
                       </tr>
                     ))}
                     {financeRows.length === 0 && (
                       <tr><td className="px-4 py-4 text-center text-gray-500" colSpan={4}>Sem pendências</td></tr>
                     )}
                   </tbody>
-              </table>
+                </table>
             </div>
             <div className="mt-4">
               <label className="block text-sm font-bold text-gray-700 mb-2">Observação de Pagamento (opcional)</label>
@@ -207,6 +222,47 @@ export default function AdminAffiliates() {
           </div>
         </div>
       </div>
+      )}
+
+      {viewOpen && viewAffiliate && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Dados do Afiliado</h3>
+              <button onClick={()=>setViewOpen(false)} className="text-gray-600 hover:text-gray-900">Fechar</button>
+            </div>
+            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="text-gray-500">Nome</div>
+                <div className="font-bold text-gray-900">{viewAffiliate.full_name || '-'}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Código</div>
+                <div className="font-bold text-gray-900">{viewAffiliate.referral_code || '-'}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">WhatsApp</div>
+                <div className="font-bold text-gray-900">{viewAffiliate.phone || '-'}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">CPF</div>
+                <div className="font-bold text-gray-900">{viewAffiliate.cpf || '-'}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Chave Pix</div>
+                <div className="font-bold text-gray-900">{viewAffiliate.pix_key || '-'}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Status</div>
+                <div className="font-bold text-gray-900">{viewAffiliate.is_active ? 'Ativo' : 'Bloqueado'}</div>
+              </div>
+              <div className="md:col-span-2">
+                <div className="text-gray-500">Cadastro</div>
+                <div className="font-bold text-gray-900">{viewAffiliate.created_at ? new Date(viewAffiliate.created_at).toLocaleDateString('pt-BR') : '-'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
