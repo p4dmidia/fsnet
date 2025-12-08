@@ -291,6 +291,10 @@ export default function Dashboard() {
                             {myOrders.find((o)=>o.id===comm.order_id)?.customer_name}
                           </div>
                         )}
+                        <div className="flex items-start">
+                          <Info className="w-4 h-4 mr-2 text-gray-400 mt-0.5" />
+                          <span className="text-gray-600 break-words whitespace-pre-wrap">{(comm.description && String(comm.description).trim().length>0) ? comm.description : 'Comissão de Venda'}</span>
+                        </div>
                         {comm.admin_note && (
                           <div className="flex items-start" title={comm.admin_note as string}>
                             <Info className="w-4 h-4 mr-2 text-gray-400 mt-0.5" />

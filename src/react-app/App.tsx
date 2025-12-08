@@ -54,6 +54,7 @@ export default function App() {
           <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
             <Route index element={<AdminDashboard />} />
             <Route path="lancamento" element={<AdminLancamentoPage />} />
+            <Route path="lancamento-bonus" element={<AdminLancamentoBonusPage />} />
             <Route path="afiliados" element={<AdminAffiliates />} />
             <Route path="contratos" element={<AdminContracts />} />
           </Route>
@@ -92,3 +93,4 @@ function AdminRoute({ children }: { children: React.ReactElement }) {
   if (allowed === null) return null;
   return allowed ? children : <Navigate to="/admin/login" replace />;
 }
+import AdminLancamentoBonusPage from "@/react-app/pages/AdminLancamentoBonus";
