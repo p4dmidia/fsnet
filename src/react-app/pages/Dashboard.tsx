@@ -15,12 +15,15 @@ import {
 } from "lucide-react";
 import { getAffiliateByUserId } from "@/shared/affiliates";
 import { orgSelect } from "@/shared/orgDb";
+import NetworkTree from "@/react-app/components/NetworkTree";
 
 interface DashboardStats {
   totalSales: number;
   totalCommission: number;
   pendingSales: number;
   approvedSales: number;
+  directGain: number;
+  networkGain: number;
 }
 
 export default function Dashboard() {
@@ -31,6 +34,7 @@ export default function Dashboard() {
   
   const [affiliateCode, setAffiliateCode] = useState<string | null>(null);
   const [affiliateName, setAffiliateName] = useState<string | null>(null);
+  const [affiliate, setAffiliate] = useState<any | null>(null);
   const [commissions, setCommissions] = useState<any[]>([]);
   const [myOrders, setMyOrders] = useState<any[]>([]);
 
@@ -48,6 +52,7 @@ export default function Dashboard() {
         if (aff) {
           setAffiliateCode(aff.referral_code ?? null);
           setAffiliateName(aff.full_name ?? null);
+          setAffiliate(aff);
         }
         const myComms = aff ? await orgSelect("commissions", "*", (q: any) => q.eq("affiliate_id", aff.id)) : [];
         setCommissions(myComms);
@@ -57,7 +62,9 @@ export default function Dashboard() {
         const totalCommission = myComms.reduce((sum: number, c: any) => sum + Number(c.amount || 0), 0);
         const pendingSales = myComms.filter((c: any) => c.status === "pending").length;
         const approvedSales = myComms.filter((c: any) => c.status === "paid" || c.status === "approved").length;
-        setStats({ totalSales, totalCommission, pendingSales, approvedSales });
+        const directGain = myComms.filter((c: any) => (c.type === null || c.type === undefined || c.type === 'sale') && (c.status === 'paid' || c.status === 'approved')).reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
+        const networkGain = myComms.filter((c: any) => c.type === 'recurring' && (c.status === 'paid' || c.status === 'approved')).reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
+        setStats({ totalSales, totalCommission, pendingSales, approvedSales, directGain, networkGain });
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -157,7 +164,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -205,7 +212,38 @@ export default function Dashboard() {
             </div>
             <div className="text-sm text-gray-600 font-medium">Vendas Aprovadas</div>
           </div>
+          
+          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 mb-1">
+              R$ {(stats?.directGain ?? 0).toFixed(2)}
+            </div>
+            <div className="text-sm text-gray-600 font-medium">Ganhos Diretos</div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-indigo-600" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 mb-1">
+              R$ {(stats?.networkGain ?? 0).toFixed(2)}
+            </div>
+            <div className="text-sm text-gray-600 font-medium">Bônus de Rede</div>
+          </div>
         </div>
+
+        {/* Minha Rede */}
+        {affiliate && (
+          <div className="mb-8">
+            <NetworkTree root={affiliate} />
+          </div>
+        )}
 
         {/* Tabela de Comissionamento */}
         <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 mb-8">

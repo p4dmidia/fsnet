@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useAuth } from "@/shared/authContext";
 import { Loader2, User, Phone, Mail, KeyRound, IdCard, ArrowRight } from "lucide-react";
 import { generateReferralCode } from "@/shared/affiliates";
@@ -10,16 +10,28 @@ import { FS_ORGANIZATION_ID } from "@/shared/tenant";
 export default function Cadastro() {
   const navigate = useNavigate();
   const {} = useAuth();
+  const location = useLocation();
   const isMountedRef = useRef(true);
   useEffect(() => {
     return () => { isMountedRef.current = false; };
   }, []);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      setReferredByCode(ref);
+      setHasRefParam(true);
+    }
+  }, [location.search]);
   const [fullName, setFullName] = useState("");
   const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pixKey, setPixKey] = useState("");
+  const [isClient, setIsClient] = useState(false);
+  const [referredByCode, setReferredByCode] = useState("");
+  const [hasRefParam, setHasRefParam] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -61,6 +73,8 @@ export default function Cadastro() {
         phone,
         referral_code,
         pix_key: pixKey ?? null,
+        is_client: isClient,
+        referred_by_code: referredByCode || null,
         organization_id: FS_ORGANIZATION_ID,
       };
       console.log("Payload:", payload);
@@ -163,6 +177,20 @@ export default function Cadastro() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Código de Indicação (Quem te indicou?)</label>
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg"
+                value={referredByCode}
+                onChange={(e)=>!hasRefParam && setReferredByCode(e.target.value)}
+                readOnly={hasRefParam}
+                placeholder="Ex: ABC12"
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">WhatsApp</label>
@@ -195,6 +223,13 @@ export default function Cadastro() {
                 <input className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg" value={pixKey} onChange={(e)=>setPixKey(e.target.value)} />
               </div>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1">
+            <label className="inline-flex items-center text-sm font-bold text-gray-700">
+              <input type="checkbox" className="mr-2" checked={isClient} onChange={(e)=>setIsClient(e.target.checked)} />
+              Quero ser um Cliente FS Net
+            </label>
           </div>
 
           {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>}
