@@ -228,7 +228,7 @@ export default function Cadastro() {
           <div className="grid grid-cols-1">
             <label className="inline-flex items-center text-sm font-bold text-gray-700">
               <input type="checkbox" className="mr-2" checked={isClient} onChange={(e)=>setIsClient(e.target.checked)} />
-              Quero ser um Cliente FS Net
+              Sou Cliente FS Net
             </label>
           </div>
 
